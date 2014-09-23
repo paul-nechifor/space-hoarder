@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-from gi.repository import Gtk
+from gi.repository import Gtk, Gio
 import os
 import re
 import stat
@@ -14,9 +14,22 @@ class SpaceHoarderApp(Gtk.Application):
     PAD = 1
     SORT = True
 
+    def __init__(self):
+        Gtk.Application.__init__(self,
+                flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
+        self.file = None
+
     def do_activate(self):
         window = SpaceHoarderWindow(self)
         window.show_all()
+
+    def do_command_line(self, args):
+        Gtk.Application.do_command_line(self, args)
+        l = args.get_arguments()[1:]
+        if len(l) > 0:
+            self.file = l[0]
+        self.do_activate()
+        return 0
 
 S = SpaceHoarderApp # Alias for less typing of constants.
 
@@ -47,6 +60,9 @@ class SpaceHoarderWindow(Gtk.ApplicationWindow):
         self.dirModel = None
         self.fileRects = None
 
+        if app.file != None:
+            self.usePath(app.file)
+
     def onOpenClicked(self, button):
         dialog = Gtk.FileChooserDialog("Pick a directory", self,
                 Gtk.FileChooserAction.SELECT_FOLDER,
@@ -59,11 +75,7 @@ class SpaceHoarderWindow(Gtk.ApplicationWindow):
 
     def onDirSelected(self, dialog, responseId):
         if responseId == Gtk.ResponseType.ACCEPT:
-            dirChosen = dialog.get_filename()
-            self.pathLb.set_label(dirChosen)
-            self.dirModel = DirModel(dirChosen)
-            self.fileRects = self.dirModel.getAllRects(self.lastSize)
-            self.drawingArea.queue_draw()
+            self.usePath(dialog.get_filename())
         dialog.destroy()
 
     def onDraw(self, widget, cr):
@@ -80,6 +92,12 @@ class SpaceHoarderWindow(Gtk.ApplicationWindow):
             self.drawFileRects(cr)
 
         return False
+
+    def usePath(self, path):
+        self.pathLb.set_label(path)
+        self.dirModel = DirModel(path)
+        self.fileRects = self.dirModel.getAllRects(self.lastSize)
+        self.drawingArea.queue_draw()
 
     def drawFileRects(self, cr):
         cr.select_font_face("Sans")
