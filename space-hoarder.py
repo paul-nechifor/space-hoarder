@@ -6,17 +6,20 @@ import re
 import stat
 import sys
 
+
 class SpaceHoarderApp(Gtk.Application):
     COLORS_STRING = "fb4b2d, db6e2c, fb9928, f3c71c, a7c71c, 809921, " + \
-            "86c1a1, 7241bc, c53aa9, ff3a90"
+        "86c1a1, 7241bc, c53aa9, ff3a90"
     COLORS = None
     FONT_SIZE = 8
     PAD = 1
     SORT = True
 
     def __init__(self):
-        Gtk.Application.__init__(self,
-                flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
+        Gtk.Application.__init__(
+            self,
+            flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE
+        )
         self.file = None
 
     def do_activate(self):
@@ -31,7 +34,10 @@ class SpaceHoarderApp(Gtk.Application):
         self.do_activate()
         return 0
 
-S = SpaceHoarderApp # Alias for less typing of constants.
+
+# Alias for less typing of constants.
+S = SpaceHoarderApp
+
 
 class SpaceHoarderWindow(Gtk.ApplicationWindow):
     def __init__(self, app):
@@ -60,14 +66,16 @@ class SpaceHoarderWindow(Gtk.ApplicationWindow):
         self.dirModel = None
         self.fileRects = None
 
-        if app.file != None:
+        if app.file is not None:
             self.usePath(app.file)
 
     def onOpenClicked(self, button):
-        dialog = Gtk.FileChooserDialog("Pick a directory", self,
-                Gtk.FileChooserAction.SELECT_FOLDER,
-                (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                Gtk.STOCK_OPEN, Gtk.ResponseType.ACCEPT))
+        action = Gtk.FileChooserAction.SELECT_FOLDER,
+        opts = (
+            Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+            Gtk.STOCK_OPEN, Gtk.ResponseType.ACCEPT
+        )
+        dialog = Gtk.FileChooserDialog("Pick a directory", self, action, opts)
         dialog.set_local_only(False)
         dialog.set_modal(True)
         dialog.connect("response", self.onDirSelected)
@@ -82,8 +90,8 @@ class SpaceHoarderWindow(Gtk.ApplicationWindow):
         rect = self.drawingArea.get_allocation()
         size = rect.width, rect.height
 
-        if self.dirModel == None:
-            pass # TODO: Draw an empty rectangle.
+        if self.dirModel is None:
+            pass  # TODO: Draw an empty rectangle.
         else:
             if size != self.lastSize:
                 self.lastSize = size
@@ -117,6 +125,7 @@ class SpaceHoarderWindow(Gtk.ApplicationWindow):
                 cr.show_text(f.name)
                 cr.reset_clip()
 
+
 class FileModel:
     def __init__(self, name, size, depth):
         self.name = name
@@ -128,16 +137,17 @@ class FileModel:
         if w <= S.PAD and h <= S.PAD:
             return None
 
-        return FileRect(x, y, w, h, self.name,
-                self.depth % len(S.COLORS), isContainer)
+        color = self.depth % len(S.COLORS)
+        return FileRect(x, y, w, h, self.name, color, isContainer)
 
     def addFileRects(self, rects, x, y, w, h):
         rect = self.getFileRect(x, y, w, h, False)
-        if rect != None:
+        if rect is not None:
             rects.append(rect)
 
+
 class DirModel(FileModel):
-    def __init__(self, path, depth = 0):
+    def __init__(self, path, depth=0):
         FileModel.__init__(self, os.path.basename(path), 0, depth)
         self.contains = []
         self.size = 0
@@ -170,7 +180,7 @@ class DirModel(FileModel):
 
     def addFileRects(self, rects, x, y, w, h):
         rect = self.getFileRect(x, y, w, h, True)
-        if rect != None:
+        if rect is not None:
             rects.append(rect)
             pd = S.PAD
             d = S.FONT_SIZE + 2 * pd
@@ -216,6 +226,7 @@ class DirModel(FileModel):
         self.addFileRects(rects, 0, 0, size[0], size[1])
         return rects
 
+
 class FileRect:
     def __init__(self, x, y, w, h, name, colorIndex, isContainer):
         self.x = x
@@ -226,9 +237,11 @@ class FileRect:
         self.colorIndex = colorIndex
         self.isContainer = isContainer
 
+
 def hex2tuple(h):
     n = int(h, 16)
     return (n >> 16) / 255.0, ((n >> 8) & 0xFF) / 255.0, (n & 0xFF) / 255.0
+
 
 if __name__ == "__main__":
     hexColors = re.findall(r"[0-9a-fA-F]{6}", S.COLORS_STRING)
