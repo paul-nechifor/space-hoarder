@@ -70,7 +70,7 @@ class SpaceHoarderWindow(Gtk.ApplicationWindow):
             self.usePath(app.file)
 
     def onOpenClicked(self, button):
-        action = Gtk.FileChooserAction.SELECT_FOLDER,
+        action = Gtk.FileChooserAction.SELECT_FOLDER
         opts = (
             Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
             Gtk.STOCK_OPEN, Gtk.ResponseType.ACCEPT
